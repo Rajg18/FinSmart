@@ -1,0 +1,21 @@
+# Build output
+target/
+
+# Environment files — never push real credentials
+.env
+.env.local
+*.env
+
+# IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/

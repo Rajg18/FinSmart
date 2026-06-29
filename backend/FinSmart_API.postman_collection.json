@@ -1,0 +1,446 @@
+{
+  "info": {
+    "name": "FinSmart API",
+    "_postman_id": "finsmart-api-v1",
+    "description": "Smart Personal Finance & Expense Intelligence System — 32 endpoints across 8 modules.\n\n**Setup:** Run '01 Register' then '02 Login' — the token is saved automatically to {{token}} and used by all other requests.\n\nBase URL: http://localhost:8080/api/v1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api/v1", "type": "string" },
+    { "key": "token",   "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "01 Register",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"rajganesh\",\n  \"password\": \"password123\",\n  \"name\": \"Rajganesh\",\n  \"email\": \"gbrajganesh@gmail.com\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "02 Login",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "if (pm.response.code === 200) {",
+                "    pm.collectionVariables.set('token', pm.response.json().token);",
+                "    console.log('Token saved:', pm.response.json().token.substring(0, 20) + '...');",
+                "}"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"rajganesh\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "03 Login Demo",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "if (pm.response.code === 200) {",
+                "    pm.collectionVariables.set('token', pm.response.json().token);",
+                "}"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"demo\",\n  \"password\": \"demo123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transactions",
+      "item": [
+        {
+          "name": "Create Transaction (DEBIT)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"merchant\": \"Swiggy\",\n  \"amount\": 450.00,\n  \"type\": \"DEBIT\",\n  \"category\": \"FOOD\",\n  \"paymentMethod\": \"UPI\",\n  \"transactionDate\": \"2026-06-15T19:30:00\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/transactions", "host": ["{{baseUrl}}"], "path": ["transactions"] }
+          }
+        },
+        {
+          "name": "Create Transaction (CREDIT / Salary)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"merchant\": \"HDFC Salary\",\n  \"amount\": 75000.00,\n  \"type\": \"CREDIT\",\n  \"category\": \"INCOME\",\n  \"paymentMethod\": \"Bank Transfer\",\n  \"transactionDate\": \"2026-06-01T09:00:00\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/transactions", "host": ["{{baseUrl}}"], "path": ["transactions"] }
+          }
+        },
+        {
+          "name": "List Transactions (paginated)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/transactions?page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["transactions"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" },
+                { "key": "type", "value": "DEBIT", "disabled": true },
+                { "key": "category", "value": "FOOD", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Transaction by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/transactions/1", "host": ["{{baseUrl}}"], "path": ["transactions", "1"] }
+          }
+        },
+        {
+          "name": "Update Transaction",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"merchant\": \"Swiggy\",\n  \"amount\": 500.00,\n  \"type\": \"DEBIT\",\n  \"category\": \"FOOD\",\n  \"paymentMethod\": \"Credit Card\",\n  \"transactionDate\": \"2026-06-15T19:30:00\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/transactions/1", "host": ["{{baseUrl}}"], "path": ["transactions", "1"] }
+          }
+        },
+        {
+          "name": "Delete Transaction (soft delete)",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/transactions/1", "host": ["{{baseUrl}}"], "path": ["transactions", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Budgets",
+      "item": [
+        {
+          "name": "Create Budget",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"FOOD\",\n  \"limitAmount\": 8000\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/budgets", "host": ["{{baseUrl}}"], "path": ["budgets"] }
+          }
+        },
+        {
+          "name": "List Budgets (current month)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/budgets", "host": ["{{baseUrl}}"], "path": ["budgets"] }
+          }
+        },
+        {
+          "name": "Get Budget by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/budgets/1", "host": ["{{baseUrl}}"], "path": ["budgets", "1"] }
+          }
+        },
+        {
+          "name": "Update Budget",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"FOOD\",\n  \"limitAmount\": 10000\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/budgets/1", "host": ["{{baseUrl}}"], "path": ["budgets", "1"] }
+          }
+        },
+        {
+          "name": "Delete Budget",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/budgets/1", "host": ["{{baseUrl}}"], "path": ["budgets", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Goals",
+      "item": [
+        {
+          "name": "Create Goal",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Europe Vacation\",\n  \"targetAmount\": 150000,\n  \"deadline\": \"2027-03-31\",\n  \"priority\": 1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/goals", "host": ["{{baseUrl}}"], "path": ["goals"] }
+          }
+        },
+        {
+          "name": "List Goals (priority ordered)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/goals", "host": ["{{baseUrl}}"], "path": ["goals"] }
+          }
+        },
+        {
+          "name": "Get Goal by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/goals/1", "host": ["{{baseUrl}}"], "path": ["goals", "1"] }
+          }
+        },
+        {
+          "name": "Update Goal",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Europe Vacation Fund\",\n  \"targetAmount\": 200000,\n  \"deadline\": \"2027-06-30\",\n  \"priority\": 1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/goals/1", "host": ["{{baseUrl}}"], "path": ["goals", "1"] }
+          }
+        },
+        {
+          "name": "Allocate to Goal (Pay Yourself First)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 10000\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/goals/1/allocate", "host": ["{{baseUrl}}"], "path": ["goals", "1", "allocate"] }
+          }
+        },
+        {
+          "name": "Delete Goal",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/goals/1", "host": ["{{baseUrl}}"], "path": ["goals", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscriptions",
+      "item": [
+        {
+          "name": "Add Subscription (Monthly)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Netflix\",\n  \"amount\": 649,\n  \"billingCycle\": \"MONTHLY\",\n  \"startDate\": \"2025-01-01\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/subscriptions", "host": ["{{baseUrl}}"], "path": ["subscriptions"] }
+          }
+        },
+        {
+          "name": "Add Subscription (Yearly)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"iCloud 50GB\",\n  \"amount\": 750,\n  \"billingCycle\": \"YEARLY\",\n  \"startDate\": \"2026-01-01\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/subscriptions", "host": ["{{baseUrl}}"], "path": ["subscriptions"] }
+          }
+        },
+        {
+          "name": "List Active Subscriptions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/subscriptions?activeOnly=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["subscriptions"],
+              "query": [{ "key": "activeOnly", "value": "true" }]
+            }
+          }
+        },
+        {
+          "name": "Get Subscription Summary (monthly burden)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/subscriptions/summary", "host": ["{{baseUrl}}"], "path": ["subscriptions", "summary"] }
+          }
+        },
+        {
+          "name": "Get Subscription by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/subscriptions/1", "host": ["{{baseUrl}}"], "path": ["subscriptions", "1"] }
+          }
+        },
+        {
+          "name": "Update Subscription",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Netflix Premium\",\n  \"amount\": 799,\n  \"billingCycle\": \"MONTHLY\",\n  \"startDate\": \"2025-01-01\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/subscriptions/1", "host": ["{{baseUrl}}"], "path": ["subscriptions", "1"] }
+          }
+        },
+        {
+          "name": "Toggle Subscription Active/Inactive",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/subscriptions/1/toggle", "host": ["{{baseUrl}}"], "path": ["subscriptions", "1", "toggle"] }
+          }
+        },
+        {
+          "name": "Delete Subscription",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/subscriptions/1", "host": ["{{baseUrl}}"], "path": ["subscriptions", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard & Bank Feed",
+      "item": [
+        {
+          "name": "Get Dashboard",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/dashboard", "host": ["{{baseUrl}}"], "path": ["dashboard"] }
+          }
+        },
+        {
+          "name": "Trigger Bank Feed Sync (6h cooldown)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/bank-feed/sync", "host": ["{{baseUrl}}"], "path": ["bank-feed", "sync"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Category Breakdown (current month)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/analytics/category-breakdown?month=6&year=2026",
+              "host": ["{{baseUrl}}"],
+              "path": ["analytics", "category-breakdown"],
+              "query": [
+                { "key": "month", "value": "6" },
+                { "key": "year",  "value": "2026" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Monthly Comparison (May vs June)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/analytics/monthly-comparison?month1=5&year1=2026&month2=6&year2=2026",
+              "host": ["{{baseUrl}}"],
+              "path": ["analytics", "monthly-comparison"],
+              "query": [
+                { "key": "month1", "value": "5" },
+                { "key": "year1",  "value": "2026" },
+                { "key": "month2", "value": "6" },
+                { "key": "year2",  "value": "2026" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Spending Trend (last 6 months)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/analytics/spending-trend?months=6",
+              "host": ["{{baseUrl}}"],
+              "path": ["analytics", "spending-trend"],
+              "query": [{ "key": "months", "value": "6" }]
+            }
+          }
+        },
+        {
+          "name": "Top 5 Merchants by Spend",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/analytics/top-merchants?month=6&year=2026&limit=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["analytics", "top-merchants"],
+              "query": [
+                { "key": "month",  "value": "6" },
+                { "key": "year",   "value": "2026" },
+                { "key": "limit",  "value": "5" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Batch",
+      "item": [
+        {
+          "name": "Run Monthly Report Job",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/batch/monthly-report/run", "host": ["{{baseUrl}}"], "path": ["batch", "monthly-report", "run"] }
+          }
+        }
+      ]
+    }
+  ]
+}

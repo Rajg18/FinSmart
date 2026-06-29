@@ -1,0 +1,108 @@
+spring:
+  application:
+    name: finsmart-backend
+
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/finsmart?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+      connect-timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: /
+    listener:
+      simple:
+        auto-startup: false
+      direct:
+        auto-startup: false
+
+  mail:
+    host: smtp.gmail.com
+    port: 465
+    username: ${MAIL_USERNAME:your_gmail@gmail.com}
+    password: ${MAIL_PASSWORD:your_app_password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+          starttls:
+            enable: false
+            required: false
+
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:4e5eca6e8a5c4f2a9b3d7f1e6c8a2b4d5e7f9a1c3b5d7e9f1a3c5b7d9e1f3a5}
+    expiration-ms: 86400000
+
+  demo:
+    username: ${DEMO_USERNAME:demo}
+    password: ${DEMO_PASSWORD:demo123}
+    name: Demo User
+
+  rabbitmq:
+    exchange: finsmart.alert.exchange
+    queue: finsmart.alert.queue
+    routing-key: finsmart.alert
+
+  alert:
+    demo:
+      email: ${MAIL_USERNAME:your_gmail@gmail.com}
+
+  base-url: ${APP_BASE_URL:http://localhost:8080/api/v1}
+
+  bank-feed:
+    slot-interval-hours: 6
+    max-slots: 8
+
+logging:
+  level:
+    com.finsmart: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
