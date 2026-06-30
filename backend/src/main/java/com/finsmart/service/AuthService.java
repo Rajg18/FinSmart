@@ -57,22 +57,18 @@ public class AuthService {
             throw new ConflictException("Email is already registered");
         }
 
-        String verificationToken = UUID.randomUUID().toString();
-
         User user = User.builder()
                 .name(request.username())
                 .username(request.username())
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
                 .emailAlerts(true)
-                .verified(false)
-                .verificationToken(verificationToken)
+                .verified(true)
                 .role(User.Role.USER)
                 .build();
 
         userRepository.save(user);
-        emailService.sendVerificationEmail(request.email(), verificationToken);
-        log.info("New user registered (pending verification): {}", request.username());
+        log.info("New user registered: {}", request.username());
     }
 
     @Transactional
