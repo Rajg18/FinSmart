@@ -56,7 +56,7 @@ public class BudgetService {
                 .build();
 
         Budget saved = budgetRepository.save(budget);
-        initRedisCounter(saved);
+        tryInitRedisCounter(saved);
         return budgetMapper.toResponse(saved);
     }
 
@@ -67,7 +67,7 @@ public class BudgetService {
         return budgetRepository
                 .findByUserIdAndMonthAndYear(user.getId(), now.getMonthValue(), now.getYear())
                 .stream()
-                .map(b -> syncFromRedis(b, user.getId()))
+                .map(b -> trySyncFromRedis(b, user.getId()))
                 .map(budgetMapper::toResponse)
                 .toList();
     }
@@ -76,7 +76,7 @@ public class BudgetService {
     public BudgetResponse getById(String username, Long budgetId) {
         User user = findUser(username);
         Budget budget = findBudget(budgetId, user.getId());
-        return budgetMapper.toResponse(syncFromRedis(budget, user.getId()));
+        return budgetMapper.toResponse(trySyncFromRedis(budget, user.getId()));
     }
 
     @Transactional
@@ -92,7 +92,7 @@ public class BudgetService {
         User user = findUser(username);
         Budget budget = findBudget(budgetId, user.getId());
         String key = redisKey(user.getId(), budget.getCategory(), budget.getMonth(), budget.getYear());
-        redisTemplate.delete(key);
+        try { redisTemplate.delete(key); } catch (Exception ex) { log.warn("Redis delete failed: {}", ex.getMessage()); }
         budgetRepository.delete(budget);
     }
 
@@ -102,32 +102,41 @@ public class BudgetService {
         budgetRepository
                 .findByUserIdAndCategoryAndMonthAndYear(user.getId(), category, now.getMonthValue(), now.getYear())
                 .ifPresent(budget -> {
-                    String key = redisKey(user.getId(), category, now.getMonthValue(), now.getYear());
-                    Long newCents = redisTemplate.opsForValue().increment(key, amount.multiply(BigDecimal.valueOf(100)).longValue());
-
-                    if (newCents != null) {
-                        BigDecimal newSpent = BigDecimal.valueOf(newCents).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-                        budget.setSpentAmount(newSpent);
-                    } else {
+                    try {
+                        String key = redisKey(user.getId(), category, now.getMonthValue(), now.getYear());
+                        Long newCents = redisTemplate.opsForValue().increment(key, amount.multiply(BigDecimal.valueOf(100)).longValue());
+                        if (newCents != null) {
+                            budget.setSpentAmount(BigDecimal.valueOf(newCents).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
+                        } else {
+                            budget.setSpentAmount(budget.getSpentAmount().add(amount));
+                        }
+                    } catch (Exception ex) {
+                        log.warn("Redis unavailable, falling back to DB for spending: {}", ex.getMessage());
                         budget.setSpentAmount(budget.getSpentAmount().add(amount));
                     }
-
                     budgetRepository.save(budget);
                 });
     }
 
-    private void initRedisCounter(Budget budget) {
-        String key = redisKey(budget.getUser().getId(), budget.getCategory(), budget.getMonth(), budget.getYear());
-        long cents = budget.getSpentAmount().multiply(BigDecimal.valueOf(100)).longValue();
-        redisTemplate.opsForValue().set(key, String.valueOf(cents), 35, TimeUnit.DAYS);
+    private void tryInitRedisCounter(Budget budget) {
+        try {
+            String key = redisKey(budget.getUser().getId(), budget.getCategory(), budget.getMonth(), budget.getYear());
+            long cents = budget.getSpentAmount().multiply(BigDecimal.valueOf(100)).longValue();
+            redisTemplate.opsForValue().set(key, String.valueOf(cents), 35, TimeUnit.DAYS);
+        } catch (Exception ex) {
+            log.warn("Redis unavailable, skipping counter init: {}", ex.getMessage());
+        }
     }
 
-    private Budget syncFromRedis(Budget budget, Long userId) {
-        String key = redisKey(userId, budget.getCategory(), budget.getMonth(), budget.getYear());
-        String value = redisTemplate.opsForValue().get(key);
-        if (value != null) {
-            BigDecimal spent = BigDecimal.valueOf(Long.parseLong(value)).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-            budget.setSpentAmount(spent);
+    private Budget trySyncFromRedis(Budget budget, Long userId) {
+        try {
+            String key = redisKey(userId, budget.getCategory(), budget.getMonth(), budget.getYear());
+            String value = redisTemplate.opsForValue().get(key);
+            if (value != null) {
+                budget.setSpentAmount(BigDecimal.valueOf(Long.parseLong(value)).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
+            }
+        } catch (Exception ex) {
+            log.warn("Redis unavailable, using DB value for budget {}: {}", budget.getId(), ex.getMessage());
         }
         return budget;
     }
