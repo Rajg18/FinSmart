@@ -6,7 +6,6 @@ import com.finsmart.dto.response.AuthResponse;
 import com.finsmart.entity.User;
 import com.finsmart.exception.BusinessException;
 import com.finsmart.exception.ConflictException;
-import com.finsmart.exception.ResourceNotFoundException;
 import com.finsmart.exception.UnauthorizedException;
 import com.finsmart.repository.BudgetRepository;
 import com.finsmart.repository.GoalRepository;
@@ -20,7 +19,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.UUID;
 
@@ -36,7 +34,6 @@ public class AuthService {
     private final SubscriptionRepository subscriptionRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
-    private final EmailService emailService;
 
     @Value("${app.demo.username}")
     private String demoUsername;
@@ -62,27 +59,12 @@ public class AuthService {
                 .username(request.username())
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
-                .emailAlerts(true)
                 .verified(true)
                 .role(User.Role.USER)
                 .build();
 
         userRepository.save(user);
         log.info("New user registered: {}", request.username());
-    }
-
-    @Transactional
-    public AuthResponse verifyEmail(String token) {
-        User user = userRepository.findByVerificationToken(token)
-                .orElseThrow(() -> new ResourceNotFoundException("Invalid or expired verification link"));
-
-        user.setVerified(true);
-        user.setVerificationToken(null);
-        userRepository.save(user);
-        log.info("Email verified for user: {}", user.getUsername());
-
-        String jwt = jwtUtil.generateToken(user.getUsername());
-        return new AuthResponse(jwt, user.getUsername(), user.getName(), user.isEmailAlerts(), user.getRole().name());
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -98,11 +80,11 @@ public class AuthService {
         }
 
         if (!user.isVerified()) {
-            throw new BusinessException("Please verify your email before logging in. Check your inbox for the verification link.");
+            throw new BusinessException("Account is not active. Please contact support.");
         }
 
         String token = jwtUtil.generateToken(user.getUsername());
-        return new AuthResponse(token, user.getUsername(), user.getName(), user.isEmailAlerts(), user.getRole().name());
+        return new AuthResponse(token, user.getUsername(), user.getName(), user.getRole().name());
     }
 
     @Transactional
@@ -112,14 +94,14 @@ public class AuthService {
                 .name(demoName)
                 .username(uniqueUsername)
                 .password(passwordEncoder.encode(demoPassword))
-                .emailAlerts(false)
+                .verified(true)
                 .role(User.Role.DEMO)
                 .build();
         userRepository.save(demoUser);
         log.info("Demo session created: {}", uniqueUsername);
 
         String token = jwtUtil.generateToken(demoUser.getUsername());
-        return new AuthResponse(token, demoUser.getUsername(), demoUser.getName(), false, User.Role.DEMO.name());
+        return new AuthResponse(token, demoUser.getUsername(), demoUser.getName(), User.Role.DEMO.name());
     }
 
     @Transactional

@@ -12,8 +12,5 @@ public record BudgetResponse(
         BigDecimal remainingAmount,
         double percentageUsed,
         int month,
-        int year,
-        boolean alert50Sent,
-        boolean alert80Sent,
-        boolean alert100Sent
+        int year
 ) {}

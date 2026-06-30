@@ -31,16 +31,9 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Column(name = "email_alerts", nullable = false)
-    @Builder.Default
-    private boolean emailAlerts = false;
-
     @Column(name = "verified", nullable = false)
     @Builder.Default
     private boolean verified = false;
-
-    @Column(name = "verification_token")
-    private String verificationToken;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

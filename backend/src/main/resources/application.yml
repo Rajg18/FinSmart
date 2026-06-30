@@ -28,36 +28,6 @@ spring:
           max-idle: 8
           min-idle: 0
 
-  rabbitmq:
-    addresses: ${RABBITMQ_URL:amqp://guest:guest@localhost:5672}
-    virtual-host: ${RABBITMQ_VHOST:/}
-    listener:
-      simple:
-        auto-startup: false
-      direct:
-        auto-startup: false
-
-  mail:
-    host: smtp.gmail.com
-    port: 465
-    username: ${MAIL_USERNAME:your_gmail@gmail.com}
-    password: ${MAIL_PASSWORD:your_app_password}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          ssl:
-            enable: true
-          starttls:
-            enable: false
-            required: false
-
-  batch:
-    job:
-      enabled: false
-    jdbc:
-      initialize-schema: always
-
 server:
   port: 8080
   servlet:
@@ -79,15 +49,6 @@ app:
     username: ${DEMO_USERNAME:demo}
     password: ${DEMO_PASSWORD:demo123}
     name: Demo User
-
-  rabbitmq:
-    exchange: finsmart.alert.exchange
-    queue: finsmart.alert.queue
-    routing-key: finsmart.alert
-
-  alert:
-    demo:
-      email: ${MAIL_USERNAME:your_gmail@gmail.com}
 
   base-url: ${APP_BASE_URL:http://localhost:8080/api/v1}
 

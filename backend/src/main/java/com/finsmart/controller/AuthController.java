@@ -23,16 +23,10 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    @Operation(summary = "Register a new user — sends a verification email before allowing login")
+    @Operation(summary = "Register a new user")
     public ResponseEntity<Void> register(@Valid @RequestBody RegisterRequest request) {
         authService.register(request);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
-    }
-
-    @GetMapping("/verify")
-    @Operation(summary = "Verify email using token from the verification link")
-    public ResponseEntity<AuthResponse> verify(@RequestParam String token) {
-        return ResponseEntity.ok(authService.verifyEmail(token));
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/login")

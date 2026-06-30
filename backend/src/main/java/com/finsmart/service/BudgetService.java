@@ -8,8 +8,6 @@ import com.finsmart.entity.User;
 import com.finsmart.exception.ConflictException;
 import com.finsmart.exception.ResourceNotFoundException;
 import com.finsmart.mapper.BudgetMapper;
-import com.finsmart.messaging.AlertMessage;
-import com.finsmart.messaging.AlertProducer;
 import com.finsmart.repository.BudgetRepository;
 import com.finsmart.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +31,6 @@ public class BudgetService {
     private final UserRepository userRepository;
     private final BudgetMapper budgetMapper;
     private final RedisTemplate<String, String> redisTemplate;
-    private final AlertProducer alertProducer;
 
     private static final String REDIS_KEY = "budget:%d:%s:%d:%d";
 
@@ -87,9 +84,7 @@ public class BudgetService {
         User user = findUser(username);
         Budget budget = findBudget(budgetId, user.getId());
         budget.setLimitAmount(request.limitAmount());
-        Budget saved = budgetRepository.save(budget);
-        checkAndFireAlerts(saved, user);
-        return budgetMapper.toResponse(saved);
+        return budgetMapper.toResponse(budgetRepository.save(budget));
     }
 
     @Transactional
@@ -118,53 +113,7 @@ public class BudgetService {
                     }
 
                     budgetRepository.save(budget);
-                    checkAndFireAlerts(budget, user);
                 });
-    }
-
-    public void checkAndFireAlerts(Budget budget, User user) {
-        if (budget.getLimitAmount().compareTo(BigDecimal.ZERO) == 0) return;
-
-        double pct = budget.getSpentAmount()
-                .divide(budget.getLimitAmount(), 4, RoundingMode.HALF_UP)
-                .multiply(BigDecimal.valueOf(100))
-                .doubleValue();
-
-        if (pct >= 50 && !budget.isAlert50Sent()) {
-            budget.setAlert50Sent(true);
-            budgetRepository.save(budget);
-            fireAlert(budget, user, 50);
-        }
-        if (pct >= 80 && !budget.isAlert80Sent()) {
-            budget.setAlert80Sent(true);
-            budgetRepository.save(budget);
-            fireAlert(budget, user, 80);
-        }
-        if (pct >= 100 && !budget.isAlert100Sent()) {
-            budget.setAlert100Sent(true);
-            budgetRepository.save(budget);
-            fireAlert(budget, user, 100);
-        }
-    }
-
-    private void fireAlert(Budget budget, User user, int threshold) {
-        double pct = budget.getSpentAmount()
-                .divide(budget.getLimitAmount(), 4, RoundingMode.HALF_UP)
-                .multiply(BigDecimal.valueOf(100))
-                .doubleValue();
-
-        AlertMessage alert = new AlertMessage(
-                user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                "BUDGET_" + threshold + "_PCT",
-                budget.getCategory().name(),
-                pct,
-                budget.getSpentAmount().doubleValue(),
-                budget.getLimitAmount().doubleValue()
-        );
-        alertProducer.publish(alert);
-        log.info("Budget alert {}% fired for user {} category {}", threshold, user.getUsername(), budget.getCategory());
     }
 
     private void initRedisCounter(Budget budget) {

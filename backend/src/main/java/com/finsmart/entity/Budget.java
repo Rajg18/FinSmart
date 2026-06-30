@@ -45,15 +45,4 @@ public class Budget {
     @Column(nullable = false)
     private Integer year;
 
-    @Column(name = "alert_50_sent", nullable = false)
-    @Builder.Default
-    private boolean alert50Sent = false;
-
-    @Column(name = "alert_80_sent", nullable = false)
-    @Builder.Default
-    private boolean alert80Sent = false;
-
-    @Column(name = "alert_100_sent", nullable = false)
-    @Builder.Default
-    private boolean alert100Sent = false;
 }
