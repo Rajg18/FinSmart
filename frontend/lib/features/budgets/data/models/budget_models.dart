@@ -25,9 +25,9 @@ class BudgetResponse with _$BudgetResponse {
     required double percentageUsed,
     required int month,
     required int year,
-    required bool alert50Sent,
-    required bool alert80Sent,
-    required bool alert100Sent,
+    @Default(false) bool alert50Sent,
+    @Default(false) bool alert80Sent,
+    @Default(false) bool alert100Sent,
   }) = _BudgetResponse;
 
   factory BudgetResponse.fromJson(Map<String, dynamic> json) =>

@@ -28,9 +28,9 @@ _$BudgetResponseImpl _$$BudgetResponseImplFromJson(Map<String, dynamic> json) =>
       percentageUsed: (json['percentageUsed'] as num).toDouble(),
       month: (json['month'] as num).toInt(),
       year: (json['year'] as num).toInt(),
-      alert50Sent: json['alert50Sent'] as bool,
-      alert80Sent: json['alert80Sent'] as bool,
-      alert100Sent: json['alert100Sent'] as bool,
+      alert50Sent: json['alert50Sent'] as bool? ?? false,
+      alert80Sent: json['alert80Sent'] as bool? ?? false,
+      alert100Sent: json['alert100Sent'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$$BudgetResponseImplToJson(
